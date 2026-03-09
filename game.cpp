@@ -5,7 +5,7 @@
 
 #include "config_parser.hpp"
 #include "display_builder.hpp"
-#include "triangle_component.hpp"
+#include "pong_component.hpp"
 #include "string_utils.hpp"
 #include "exception.hpp"
 
@@ -206,15 +206,7 @@ namespace jd
 
 	bool Game::initComponents()
 	{
-		// Demo Component
-		auto vertices = std::vector<TriangleComponent::Vertex>{
-		    { DirectX::XMFLOAT3(0.0f, 0.5f, 0.5f), DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) }, // top, red
-		    { DirectX::XMFLOAT3(0.5f, -0.5f, 0.5f), DirectX::XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f) }, // right-bottom, green
-		    { DirectX::XMFLOAT3(-0.5f, -0.5f, 0.5f), DirectX::XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f) } // left-bottom, blue
-		};
-
-		auto triag = std::make_shared<TriangleComponent>(std::move(vertices), L"./resources/shaders/MyVeryFirstShader.hlsl");
-		components_.push_back(std::move(triag));
+		components_.push_back(std::make_shared<PongGameComponent>());
 
 		for (auto& component : components_) {
 			component->onInit();
@@ -250,14 +242,6 @@ namespace jd
 
 			if (raw->header.dwType == RIM_TYPEKEYBOARD)
 			{
-				/*DLOG(INFO) << strings::print("Kbd: make=%04i Flags:%04i Reserved:%04i ExtraInformation:%08i, msg=%04i VK=%i",
-					raw->data.keyboard.MakeCode,
-					raw->data.keyboard.Flags,
-					raw->data.keyboard.Reserved,
-					raw->data.keyboard.ExtraInformation,
-					raw->data.keyboard.Message,
-					raw->data.keyboard.VKey);*/
-
 				inputDevice_->onKeyDown({
 					raw->data.keyboard.MakeCode,
 					raw->data.keyboard.Flags,
@@ -267,7 +251,6 @@ namespace jd
 			}
 			else if (raw->header.dwType == RIM_TYPEMOUSE)
 			{
-				// DLOG(INFO) << strings::print("Mouse: X=%04d Y:%04d \n", raw->data.mouse.lLastX, raw->data.mouse.lLastY);
 				inputDevice_->onMouseMove({
 					raw->data.mouse.usFlags,
 					raw->data.mouse.usButtonFlags,
@@ -289,6 +272,7 @@ namespace jd
 		case WM_SIZE:
 			display_.clientWidth  = LOWORD(lParam);
 			display_.clientHeight = HIWORD(lParam);
+			display_.aspect = static_cast<float>(display_.clientWidth) / static_cast<float>(display_.clientHeight);
 			onResize();
 			break;
 
@@ -337,7 +321,6 @@ namespace jd
 		Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer;
 		ThrowIfFailed(swapChain_->GetBuffer(0, __uuidof(ID3D11Texture2D), &backBuffer));
 		ThrowIfFailed(device_->CreateRenderTargetView(backBuffer.Get(), nullptr, rtv_.GetAddressOf()));
-		
 
 		D3D11_VIEWPORT viewport = {};
 		viewport.Width = static_cast<float>(display_.clientWidth);

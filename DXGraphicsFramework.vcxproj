@@ -134,6 +134,7 @@
     <ClCompile Include="input_device.cpp" />
     <ClCompile Include="logger.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="phong_component.cpp" />
     <ClCompile Include="string_utils.cpp" />
     <ClCompile Include="triangle_component.cpp" />
   </ItemGroup>
@@ -150,6 +151,7 @@
     <ClInclude Include="jd_types.hpp" />
     <ClInclude Include="keys.hpp" />
     <ClInclude Include="logger.hpp" />
+    <ClInclude Include="pong_component.hpp" />
     <ClInclude Include="string_utils.hpp" />
     <ClInclude Include="triangle_component.hpp" />
   </ItemGroup>

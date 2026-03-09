@@ -12,6 +12,7 @@ namespace jd
 	{
 		uint32_t clientHeight;
 		uint32_t clientWidth;
+		float aspect;
 
 		HINSTANCE hInstance;
 		HWND hwnd;

@@ -40,7 +40,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR szCmdLine
 
 		return game.run();
 	}
-	catch (const jd::exception::DxException& ex)
+	catch (const std::exception& ex)
 	{
 		LOG(JERROR) << ex.what() << std::endl;
 		MessageBox(nullptr, L"Ops!", L"HR Failed", MB_OK);

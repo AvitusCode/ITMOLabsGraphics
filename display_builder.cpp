@@ -57,12 +57,13 @@ namespace jd
 		ShowWindow(hWnd, SW_SHOW);
 		SetForegroundWindow(hWnd);
 		SetFocus(hWnd);
-
 		ShowCursor(is_cursore_);
 
+		const float aspect = static_cast<float>(clientWidth_) / static_cast<float>(clientHeight_);
 		auto display = DisplayWin32 {
 			.clientHeight = clientHeight_,
 			.clientWidth = clientWidth_,
+			.aspect = aspect,
 			.hInstance = hInstance_,
 			.hwnd = hWnd
 		};

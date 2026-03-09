@@ -9,8 +9,8 @@
 #include <vector>
 
 #include "display_win32.hpp"
-#include "input_device.hpp"
 #include "game_timer.hpp"
+#include "input_device.hpp"
 
 namespace jd
 {
@@ -35,6 +35,11 @@ namespace jd
 
 		auto getDevice() const {
 			return device_;
+		}
+
+		const InputDevice& getInputDevice() const noexcept
+		{
+			return *inputDevice_;
 		}
 
 		const DisplayWin32& getDisplay() const noexcept {

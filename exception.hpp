@@ -14,7 +14,7 @@ namespace jd::exception
         DxException(HRESULT hr, std::string functionName, std::string filename, int lineNumber);
 
         const char* what() const noexcept override;
-
+    private:
         std::string errorMsg_;
     };
 }

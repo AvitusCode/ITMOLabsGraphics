@@ -102,9 +102,9 @@ namespace jd
 		Game& game_;
 		std::bitset<512> keys_;
 
-		POINT mousePosition_;
-		POINT mouseOffset_;
-		int32_t mouseWheelDelta_;
+		POINT mousePosition_{};
+		POINT mouseOffset_{};
+		int32_t mouseWheelDelta_{};
 
 		MulticastDelegate<const MouseMoveEventArgs&> mouseMove_;
 	};
