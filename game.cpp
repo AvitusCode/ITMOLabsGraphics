@@ -1,8 +1,5 @@
 #include "game.hpp"
 
-#include <windowsx.h>
-#include <DirectXMath.h>
-
 #include "config_parser.hpp"
 #include "display_builder.hpp"
 #include "pong_component.hpp"
@@ -52,7 +49,7 @@ namespace jd
 
 				if (!is_paused_) [[likely]]
 				{
-					calculateFrameStats();
+					printInfo();
 					onUpdate(timer_.deltaTime());
 					Draw();
 
@@ -68,13 +65,14 @@ namespace jd
 		return static_cast<int>(msg.wParam);
 	}
 
-	void Game::calculateFrameStats()
+	void Game::printInfo()
 	{
-		static int frameCnt{};
-		static double timeElapsed{};
+		[[maybe_unused]] static int frameCnt{};
+		[[maybe_unused]] static double timeElapsed{};
 
 		frameCnt++;
 
+#if defined(DEBUG) | defined(_DEBUG)
 		if ((timer_.totalTime() - timeElapsed) >= 1.0)
 		{
 			const float fps = static_cast<float>(frameCnt);
@@ -87,11 +85,11 @@ namespace jd
 				L"    fps: " + fpsStr +
 				L"   mspf: " + mspfStr;
 
-			SetWindowText(display_.hwnd, windowText.c_str());
-
 			frameCnt = 0;
 			timeElapsed++;
+			SetWindowText(display_.hwnd, windowText.c_str());
 		}
+#endif
 	}
 
 	bool Game::initMainWindow(HINSTANCE hInstance)
@@ -109,10 +107,10 @@ namespace jd
 			L"resources/config.txt",
 			GENERIC_READ,
 			0,
-			NULL,
+			nullptr,
 			OPEN_EXISTING,
 			FILE_ATTRIBUTE_NORMAL,
-			NULL);
+			nullptr);
 
 		if (configOnLoad != INVALID_HANDLE_VALUE)
 		{
@@ -121,7 +119,7 @@ namespace jd
 			auto bufferData = std::make_unique<char[]>(size.QuadPart);
 
 			DWORD bytesIterated;
-			if (ReadFile(configOnLoad, bufferData.get(), static_cast<DWORD>(size.QuadPart), &bytesIterated, NULL))
+			if (ReadFile(configOnLoad, bufferData.get(), static_cast<DWORD>(size.QuadPart), &bytesIterated, nullptr))
 			{
 				auto parseCmd = utils::ConfigParser<ConfigData>::make_unique({
 				    {"WINDOW_WIDTH ", &ConfigData::width},
@@ -292,7 +290,7 @@ namespace jd
 				component->onDestroy();
 			}
 
-			LOG(INFO) << "Successfully end programm!";
+			LOG(INFO) << "Successfully end program!";
 
 			PostQuitMessage(0);
 			ExitProcess(0);

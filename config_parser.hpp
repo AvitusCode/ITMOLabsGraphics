@@ -5,7 +5,6 @@
 #include <string>
 #include <string_view>
 #include <sstream>
-#include <vector>
 #include <functional>
 #include <unordered_map>
 
@@ -27,7 +26,7 @@ namespace jd::utils
 			for (auto& [token, cb] : callbacks_) {
 				size_t pos_start = sv.find(token.c_str());
 
-				// We are did not find neccessary token
+				// We are did not find necessary token
 				if (pos_start == sv.npos) {
 					continue;
 				}

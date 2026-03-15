@@ -7,6 +7,7 @@
 #include <d3d11.h>
 
 #include <vector>
+#include <array>
 
 #include "display_win32.hpp"
 #include "game_timer.hpp"
@@ -24,6 +25,11 @@ namespace jd
 			static Game game;
 			return game;
 		}
+
+		Game(const Game&) = delete;
+		Game(Game&&) = delete;
+		Game& operator=(const Game&) = delete;
+		Game& operator=(Game&&) = delete;
 
 		bool initialize(HINSTANCE hInstance);
 		LRESULT msgHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -63,10 +69,12 @@ namespace jd
 		bool is_paused_{ false };
 		bool is_rtv_init_{ false };
 
+		Game() = default;
+
 		bool initMainWindow(HINSTANCE hInstance);
 		bool initDirect3D();
 		bool initComponents();
-		void calculateFrameStats();
+		void printInfo();
 
 		void onResize();
 		void onUpdate(double deltaTime);

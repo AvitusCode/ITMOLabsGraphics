@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
+#include <ctime>
 
 #include "logger.hpp"
 #include "exception.hpp"
@@ -23,11 +24,14 @@ namespace
     static constexpr float paddleHeight   = 0.3f;
     static constexpr float ballSize       = 0.03f;
     static constexpr float lineSquareSize = 0.02f;
+    static constexpr float velFactor      = 1.1f;
+
+	static constexpr uint32_t TOTAL_SEGMENTS = 28;
 
     void playSound()
     {
-        BOOL success = PlaySound(L"./resources/sounds/pong_hit.wav", NULL, SND_FILENAME | SND_ASYNC);
-        if (!success) {
+        BOOL success = PlaySound(L"./resources/sounds/pong_hit.wav", nullptr, SND_FILENAME | SND_ASYNC);
+        if (!success) [[unlikely]] {
             DLOG(JERROR) << "Problems with sound!";
         }
     }
@@ -40,10 +44,13 @@ namespace jd
         , ballVel_{ 0.5f, 0.3f }
         , lineCount_{ 30 }
     {
-        instances_.resize(INST_LINE_START + lineCount_);
-        for (auto& instance : instances_) {
-            instance.color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-        }
+		instances_.resize(INST_LINE_START + lineCount_ + TOTAL_SEGMENTS);
+
+		const size_t segmentStart = INST_LINE_START + lineCount_;
+		for (size_t i = segmentStart; i < instances_.size(); ++i) {
+			XMStoreFloat4x4(&instances_[i].world, XMMatrixScaling(0.0f, 0.0f, 0.0f));
+		}
+
     }
 
     void PongGameComponent::onInit()
@@ -56,7 +63,9 @@ namespace jd
         createInputLayout();
         createRasterizerState();
 
-        DLOG(INFO) << "PongGameComponent creation succesed";
+        srand(static_cast<unsigned>(time(nullptr)));
+
+        DLOG(INFO) << "PongGameComponent creation sucessed";
         is_ok_ = true;
     }
 
@@ -67,13 +76,15 @@ namespace jd
         top_ = 1.0f;
         bottom_ = -1.0f;
 
-        const float step = (top_ - bottom_) / (lineCount_ + 1);
+        const float step = (top_ - bottom_) / static_cast<float>(lineCount_ + 1);
         for (uint16_t i = 0; i < lineCount_; ++i)
         {
-            float y = bottom_ + (i + 1) * step;
+            float y = bottom_ + static_cast<float>(i + 1) * step;
             auto world = XMMatrixScaling(lineSquareSize, lineSquareSize, 1.0f) * XMMatrixTranslation(0.0f, y, 0.0f);
             XMStoreFloat4x4(&instances_[INST_LINE_START + i].world, world);
         }
+
+        updateScoreDisplay();
 
         XMMATRIX proj = XMMatrixOrthographicOffCenterLH(-aspect, aspect, bottom_, top_, 0.0f, 1.0f);
         Game::getGame().getContext()->UpdateSubresource(projectionBuffer_.Get(), 0, nullptr, &proj, 0, 0);
@@ -95,8 +106,9 @@ namespace jd
         const float halfBall = ballSize * 0.5f;
         const float halfPaddleX = paddleWidth * 0.5f;
         const float halfPaddleY = paddleHeight * 0.5f;
+		static constexpr float offset = 0.05f;
 
-        float paddle1X = left_ + halfPaddleX + 0.05f;
+        float paddle1X = left_ + halfPaddleX + offset;
         if (ballPos_.x - halfBall < paddle1X + halfPaddleX &&
             ballPos_.x + halfBall > paddle1X - halfPaddleX &&
             ballPos_.y - halfBall < paddle1Y_ + halfPaddleY &&
@@ -105,12 +117,12 @@ namespace jd
             if (ballVel_.x < 0)
             {
                 playSound();
-                ballVel_.x = -ballVel_.x;
-                ballPos_.x = paddle1X + halfPaddleX + halfBall;
+				XMStoreFloat2(&ballPos_, XMVectorSetX(XMLoadFloat2(&ballPos_), paddle1X + halfPaddleX + halfBall));
+				XMStoreFloat2(&ballVel_, XMVectorScale(XMVectorSetX(XMLoadFloat2(&ballVel_), -ballVel_.x), velFactor));
             }
         }
 
-        float paddle2X = right_ - halfPaddleX - 0.05f;
+        float paddle2X = right_ - halfPaddleX - offset;
         if (ballPos_.x - halfBall < paddle2X + halfPaddleX &&
             ballPos_.x + halfBall > paddle2X - halfPaddleX &&
             ballPos_.y - halfBall < paddle2Y_ + halfPaddleY &&
@@ -119,10 +131,84 @@ namespace jd
             if (ballVel_.x > 0)
             {
                 playSound();
-                ballVel_.x = -ballVel_.x;
-                ballPos_.x = paddle2X - halfPaddleX - halfBall;
+                XMStoreFloat2(&ballPos_, XMVectorSetX(XMLoadFloat2(&ballPos_), paddle2X - halfPaddleX - halfBall));
+                XMStoreFloat2(&ballVel_, XMVectorScale(XMVectorSetX(XMLoadFloat2(&ballVel_), -ballVel_.x), velFactor));
             }
         }
+    }
+
+    void PongGameComponent::updateScoreDisplay()
+    {
+		static constexpr float digitWidth = 0.12f;
+        static constexpr float digitHeight = 0.18f;
+        static constexpr float segmentThickness = 0.02f;
+        static constexpr float digitSpacing = digitWidth * 1.2f;
+        const float digitY = top_ - digitHeight * 1.2f;
+
+        struct DigitSegmentsGeo {
+            float offsetX;
+            float offsetY;
+            float scaleX;
+            float scaleY;
+        };
+
+		static constexpr DigitSegmentsGeo segGeom[7] = {
+			{ 0.0f,  (digitHeight - segmentThickness) * 0.5f, digitWidth - 2.0f * segmentThickness, segmentThickness },
+			{ (digitWidth - segmentThickness) * 0.5f,  digitHeight * 0.25f, segmentThickness, digitHeight * 0.5f - segmentThickness },
+			{ (digitWidth - segmentThickness) * 0.5f, -digitHeight * 0.25f, segmentThickness, digitHeight * 0.5f - segmentThickness },
+			{ 0.0f, -(digitHeight - segmentThickness) * 0.5f, digitWidth - 2.0f * segmentThickness, segmentThickness },
+			{ -(digitWidth - segmentThickness) * 0.5f, -digitHeight * 0.25f, segmentThickness, digitHeight * 0.5f - segmentThickness },
+			{ -(digitWidth - segmentThickness) * 0.5f,  digitHeight * 0.25f, segmentThickness, digitHeight * 0.5f - segmentThickness },
+			{ 0.0f, 0.0f, digitWidth - 2.0f * segmentThickness, segmentThickness }
+		};
+
+		static const bool digitSegments[10][7] = {
+			{1,1,1,1,1,1,0}, // 0
+			{0,1,1,0,0,0,0}, // 1
+			{1,1,0,1,1,0,1}, // 2
+			{1,1,1,1,0,0,1}, // 3
+			{0,1,1,0,0,1,1}, // 4
+			{1,0,1,1,0,1,1}, // 5
+			{1,0,1,1,1,1,1}, // 6
+			{1,1,1,0,0,0,0}, // 7
+			{1,1,1,1,1,1,1}, // 8
+			{1,1,1,1,0,1,1}  // 9
+		};
+
+		float leftCenterX = left_ * 0.5f;
+		float rightCenterX = right_ * 0.5f;
+
+		float leftTensX = leftCenterX - digitSpacing * 0.5f;
+		float leftUnitsX = leftCenterX + digitSpacing * 0.5f;
+		float rightTensX = rightCenterX - digitSpacing * 0.5f;
+		float rightUnitsX = rightCenterX + digitSpacing * 0.5f;
+
+		int leftTens = static_cast<int>(score1_) / 10;
+		int leftUnits = static_cast<int>(score1_) % 10;
+		int rightTens = static_cast<int>(score2_) / 10;
+		int rightUnits = static_cast<int>(score2_) % 10;
+
+		auto setDigit = [this](int digit, float centerX, float centerY, size_t baseIdx) noexcept {
+			for (size_t segment = 0; segment < 7; ++segment) {
+                const size_t instIdx = baseIdx + segment;
+				if (digitSegments[digit][segment]) {
+					XMMATRIX world =
+						XMMatrixScaling(segGeom[segment].scaleX, segGeom[segment].scaleY, 1.0f) *
+						XMMatrixTranslation(segGeom[segment].offsetX, segGeom[segment].offsetY, 0.0f) *
+						XMMatrixTranslation(centerX, centerY, 0.0f);
+					XMStoreFloat4x4(&instances_[instIdx].world, world);
+				}
+				else {
+					XMStoreFloat4x4(&instances_[instIdx].world, XMMatrixScaling(0.0f, 0.0f, 0.0f));
+				}
+			}
+			};
+
+        const size_t segmentStart = INST_LINE_START + lineCount_;
+		setDigit(leftTens, leftTensX, digitY, segmentStart);
+		setDigit(leftUnits, leftUnitsX, digitY, segmentStart + 7);
+		setDigit(rightTens, rightTensX, digitY, segmentStart + 14);
+		setDigit(rightUnits, rightUnitsX, digitY, segmentStart + 21);
     }
 
     void PongGameComponent::resetBall()
@@ -167,27 +253,39 @@ namespace jd
         paddle1Y_ = std::clamp(paddle1Y_, bottom_ + halfPaddle, top_ - halfPaddle);
         paddle2Y_ = std::clamp(paddle2Y_, bottom_ + halfPaddle, top_ - halfPaddle);
 
-        ballPos_.x += ballVel_.x * delta;
-        ballPos_.y += ballVel_.y * delta;
+        XMStoreFloat2(&ballPos_, XMVectorAdd(XMLoadFloat2(&ballPos_), XMVectorSet(ballVel_.x * delta, ballVel_.y * delta, 0.0f, 0.0f)));
 
-        float halfBall = ballSize * 0.5f;
+        const float halfBall = ballSize * 0.5f;
         if (ballPos_.y + halfBall > top_)
         {
             playSound();
-            ballPos_.y = top_ - halfBall;
-            ballVel_.y = -ballVel_.y;
+            XMStoreFloat2(&ballPos_, XMVectorSetY(XMLoadFloat2(&ballPos_), top_ - halfBall));
+            XMStoreFloat2(&ballVel_, XMVectorSetY(XMLoadFloat2(&ballVel_), -ballVel_.y));
         }
         else if (ballPos_.y - halfBall < bottom_)
         {
             playSound();
-            ballPos_.y = bottom_ + halfBall;
-            ballVel_.y = -ballVel_.y;
+			XMStoreFloat2(&ballPos_, XMVectorSetY(XMLoadFloat2(&ballPos_), bottom_ + halfBall));
+			XMStoreFloat2(&ballVel_, XMVectorSetY(XMLoadFloat2(&ballVel_), -ballVel_.y));
         }
 
         ñheckPaddleCollision();
 
-        if (ballPos_.x - halfBall > right_ || ballPos_.x + halfBall < left_)
+        bool collide{ false };
+        if (ballPos_.x - halfBall > right_)
         {
+            ++score1_;
+            collide = true;
+        }
+        else if (ballPos_.x + halfBall < left_)
+        {
+            ++score2_;
+            collide = true;
+        }
+
+        if (collide)
+        {
+            updateScoreDisplay();
             resetBall();
         }
 
@@ -357,7 +455,6 @@ namespace jd
             { "WORLD", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 16, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
             { "WORLD", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 32, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
             { "WORLD", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 48, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
-            { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 64, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
         };
 
         ThrowIfFailed(Game::getGame().getDevice()->CreateInputLayout(layout, ARRAYSIZE(layout),

@@ -73,6 +73,7 @@ namespace jd
 
     void GameTimer::limitFPS(int targetFPS)
     {
+        targetFPS <<= 1;
         static const double targetFrameTime = 1.0 / targetFPS;
         const double frameTime = std::chrono::duration<double>(Clock::now() - currTime_).count();
 

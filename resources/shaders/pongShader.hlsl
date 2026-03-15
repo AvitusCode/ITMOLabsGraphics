@@ -7,7 +7,6 @@ struct VS_INPUT
 {
     float4 pos : POSITION0;
     float4x4 world : WORLD;
-    float4 color : COLOR0;
 };
 
 struct PS_INPUT
@@ -21,7 +20,7 @@ PS_INPUT VSMain(VS_INPUT input)
     PS_INPUT output;
     float4 worldPos = mul(input.world, input.pos);
     output.pos = mul(projection, worldPos);
-    output.color = input.color;
+    output.color = float4(1.0f, 1.0f, 1.0f, 1.0f);
     return output;
 }
 

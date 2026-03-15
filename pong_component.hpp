@@ -23,7 +23,6 @@ namespace jd
         struct InstanceData
         {
             DirectX::XMFLOAT4X4 world;
-            DirectX::XMFLOAT4 color;
         };
 
         void createBuffers();
@@ -36,6 +35,7 @@ namespace jd
         void resetBall();
         void clampPositions();
         void ñheckPaddleCollision();
+        void updateScoreDisplay();
 
         enum InstanceIndex
         {
@@ -53,6 +53,8 @@ namespace jd
 
         float paddle1Y_{}; // left puddle
         float paddle2Y_{}; // right puddle
+        uint32_t score1_{}; // player 1
+        uint32_t score2_{};  // player 2
 
         DirectX::XMFLOAT2 ballPos_;
         DirectX::XMFLOAT2 ballVel_;

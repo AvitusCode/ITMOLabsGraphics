@@ -3,9 +3,44 @@
 #include <iostream>
 #include <fstream>
 
-#include <Windows.h>
+#include <windows.h>
 
 #include "string_utils.hpp"
+
+namespace
+{
+	class DefaultFileLogger final
+	{
+	public:
+		DefaultFileLogger();
+		void toFile(std::string_view str);
+		~DefaultFileLogger();
+
+	private:
+		std::ofstream file;
+	};
+
+	DefaultFileLogger::DefaultFileLogger()
+	{
+		if (DWORD fileAttrib = GetFileAttributesA("log"); fileAttrib == INVALID_FILE_ATTRIBUTES)
+		{
+			if (!CreateDirectoryA("log", nullptr))
+			{
+				std::abort();
+			}
+		}
+
+		file.open("log/render_project_log.txt", std::ios::out | std::ios::trunc);
+	}
+
+	void DefaultFileLogger::toFile(std::string_view str) {
+		file << str;
+	}
+
+	DefaultFileLogger::~DefaultFileLogger() {
+		file << std::endl;
+	}
+}
 
 namespace jd::logging
 {
@@ -22,43 +57,11 @@ namespace jd::logging
 		case 3: return "[FATAL]: ";
 		}
 
-		return "unreachable!!!";
+		__assume(0);
 	}
 
 	std::error_code make_error_code(LogErrors err) noexcept {
 		return std::error_code(static_cast<int>(err), LoggerError::instance());
-	}
-
-	class DefaultFileLogger final
-	{
-	public:
-		DefaultFileLogger();
-		void toFile(std::string_view str);
-		~DefaultFileLogger();
-
-	private:
-		std::ofstream file;
-	};
-
-	DefaultFileLogger::DefaultFileLogger()
-	{
-		if (DWORD fileAttrib = GetFileAttributesA("log"); fileAttrib == INVALID_FILE_ATTRIBUTES)
-		{
-			if (!CreateDirectoryA("log", NULL))
-			{
-				std::abort();
-			}
-		}
-
-		file.open("log/render_project_log.txt", std::ios::out | std::ios::trunc);
-	}
-
-	void DefaultFileLogger::toFile(std::string_view str) {
-		file << str;
-	}
-
-	DefaultFileLogger::~DefaultFileLogger() {
-		file << std::endl;
 	}
 
 	void DefaultLogStd(std::string_view str) {

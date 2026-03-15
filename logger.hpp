@@ -3,6 +3,7 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <cstdlib>
 
 namespace jd::logging
 {
@@ -46,11 +47,17 @@ namespace jd::logging
 		using log_prefix = void(*)(std::ostream&, std::string_view, int num);
 		using log_fn = void(*)(std::string_view);
 
+		InternalLogger() = delete;
+		InternalLogger(const InternalLogger&) = delete;
+		InternalLogger(InternalLogger&&) = delete;
+		InternalLogger& operator=(const InternalLogger&) = delete;
+		InternalLogger& operator=(InternalLogger&&) = delete;
+
 		inline explicit InternalLogger(jd::logging::LogErrors error_type, std::string_view path, int num) 
 			: error_type_(error_type) 
 		{
-			if (!prefix_func_ || !log_func_) {
-				throw std::runtime_error("CRITICAL ERROR: you do not configure Logger before use");
+			if (!prefix_func_ || !log_func_) [[unlikely]] {
+				std::abort();
 			}
 
 			prefix_func_(stream_, path, num);
