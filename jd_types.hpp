@@ -11,6 +11,9 @@ namespace jd
 	template<typename T>
 	using sptr = std::shared_ptr<T>;
 
+	template<typename T>
+	using wptr = std::weak_ptr<T>;
+
 	// before c++23
 	template<typename Enum>
 	constexpr std::underlying_type_t<Enum> to_underlying(Enum e) noexcept {

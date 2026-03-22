@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -127,18 +127,25 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ball_component.cpp" />
     <ClCompile Include="display_builder.cpp" />
     <ClCompile Include="exception.cpp" />
     <ClCompile Include="game.cpp" />
+    <ClCompile Include="line_component.cpp" />
+    <ClCompile Include="paddle_component.cpp" />
+    <ClCompile Include="quad_component.cpp" />
     <ClCompile Include="game_timer.cpp" />
     <ClCompile Include="input_device.cpp" />
     <ClCompile Include="logger.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="phong_component.cpp" />
+    <ClCompile Include="score_component.cpp" />
+    <ClCompile Include="SimpleMath.cpp" />
     <ClCompile Include="string_utils.cpp" />
     <ClCompile Include="triangle_component.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ball_component.hpp" />
+    <ClInclude Include="collidable.hpp" />
     <ClInclude Include="config_parser.hpp" />
     <ClInclude Include="delegates.hpp" />
     <ClInclude Include="display_builder.hpp" />
@@ -150,10 +157,15 @@
     <ClInclude Include="input_device.hpp" />
     <ClInclude Include="jd_types.hpp" />
     <ClInclude Include="keys.hpp" />
+    <ClInclude Include="line_component.hpp" />
     <ClInclude Include="logger.hpp" />
-    <ClInclude Include="pong_component.hpp" />
+    <ClInclude Include="paddle_component.hpp" />
+    <ClInclude Include="quad_component.hpp" />
+    <ClInclude Include="score_component.hpp" />
+    <ClInclude Include="SimpleMath.h" />
     <ClInclude Include="string_utils.hpp" />
     <ClInclude Include="triangle_component.hpp" />
+    <ClInclude Include="velocity_component.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

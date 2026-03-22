@@ -40,6 +40,11 @@ namespace jd
         // pass
     }
 
+    void TriangleComponent::onResize()
+    {
+        // pass
+	}
+
     void TriangleComponent::onReload()
     {
         compileShaders();

@@ -24,6 +24,7 @@ namespace jd
 
         void onInit() override;
         void onUpdate(double deltaTime) override;
+        void onResize() override;
         void onReload() override;
         void onDestroy() override;
         void Draw() override;

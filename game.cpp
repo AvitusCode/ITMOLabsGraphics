@@ -1,10 +1,15 @@
 #include "game.hpp"
 
+#include "game_component.hpp"
 #include "config_parser.hpp"
 #include "display_builder.hpp"
-#include "pong_component.hpp"
 #include "string_utils.hpp"
 #include "exception.hpp"
+
+#include "ball_component.hpp"
+#include "paddle_component.hpp"
+#include "line_component.hpp"
+#include "score_component.hpp"
 
 #include "logger.hpp"
 
@@ -204,11 +209,34 @@ namespace jd
 
 	bool Game::initComponents()
 	{
-		components_.push_back(std::make_shared<PongGameComponent>());
+		const float aspect = display_.aspect;
+		const float top = 1.0f, bottom = -1.0f;
+		const float score_pos = 0.5f;
 
+		auto leftPaddle  = std::make_shared<PaddleComponent>(Keys::W, Keys::S, true);
+		auto rightPaddle = std::make_shared<PaddleComponent>(Keys::Up, Keys::Down, false);
+		auto leftScore   = std::make_shared<ScoreComponent>(-score_pos);
+		auto rightScore  = std::make_shared<ScoreComponent>(score_pos);
+		auto ball        = std::make_shared<BallComponent>(leftScore, rightScore);
+		auto line        = std::make_shared<LineComponent>();
+
+		ball->addCollider(leftPaddle.get());
+		ball->addCollider(rightPaddle.get());
+
+		components_.reserve(6);
+		components_.push_back(std::move(leftPaddle));
+		components_.push_back(std::move(rightPaddle));
+		components_.push_back(std::move(leftScore));
+		components_.push_back(std::move(rightScore));
+		components_.push_back(std::move(ball));
+		components_.push_back(std::move(line));
+
+		QuadComponent::initSharedResources(L"./resources/shaders/pongShader.hlsl");
 		for (auto& component : components_) {
 			component->onInit();
+			component->onResize();
 		}
+		QuadComponent::updateProjection(aspect, top, bottom);
 
 		return true;
 	}
@@ -330,6 +358,12 @@ namespace jd
 
 		context_->RSSetViewports(1, &viewport);
 		context_->OMSetRenderTargets(0, nullptr, nullptr);
+
+		for (auto& component : components_) {
+			component->onResize();
+		}
+
+		QuadComponent::updateProjection(display_.aspect, 1.0f, -1.0f);
 	}
 
 	void Game::onUpdate(double deltaTime)
@@ -341,7 +375,7 @@ namespace jd
 
 	void Game::Draw()
 	{
-		float color[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+		static constexpr float color[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
 		context_->OMSetRenderTargets(1, rtv_.GetAddressOf(), nullptr);
 		context_->ClearRenderTargetView(rtv_.Get(), color);
@@ -351,7 +385,6 @@ namespace jd
 		}
 
 		context_->OMSetRenderTargets(0, nullptr, nullptr);
-
 		swapChain_->Present(1, /*DXGI_PRESENT_DO_NOT_WAIT*/ 0);
 	}
 }
