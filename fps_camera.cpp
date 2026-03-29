@@ -15,8 +15,8 @@ namespace jd
 		Vector3 forward = Vector3::Transform(Vector3::Forward, q);
 		forward.Normalize();
 
-		pitch_ = DirectX::XMConvertToDegrees(std::asin(forward.y));
-		yaw_ = DirectX::XMConvertToDegrees(std::atan2(forward.x, forward.z));
+		pitch_ = 0.0f;
+		yaw_ = 0.0f;
 	}
 
 	void FpsCameraStrategy::Update(CameraComponent& camera, double deltaTime)

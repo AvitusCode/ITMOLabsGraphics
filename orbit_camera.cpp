@@ -69,9 +69,7 @@ namespace jd
 		Quaternion yaw = Quaternion::CreateFromAxisAngle(up, dx);
 		Quaternion pitch = Quaternion::CreateFromAxisAngle(right, dy);
 
-		rotation_ = yaw * rotation_;
-		rotation_ = rotation_ * pitch;
-
+		rotation_ = yaw * rotation_ * pitch;
 		rotation_.Normalize();
 
 		if (ev.wheelDelta != 0)

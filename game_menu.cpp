@@ -29,7 +29,10 @@ namespace jd
 		static UINT selectedObject_ = 0u;
 		static UINT lastSelectedObject_ = ~0u;
 		static auto camType = event::CameraType::FPS;
-		static StaticInfo info{};
+		static StaticInfo info{
+			.indx = 0u,
+			.comp_ptr = nullptr
+		};
 
 		if (id >= MENU_SELECT_OBJECT_BASE && id < MENU_SELECT_OBJECT_BASE + objects_)
 		{
@@ -63,6 +66,10 @@ namespace jd
 				}
 			}
 
+			if (lastSelectedObject_ == selectedObject_) {
+				info.comp_ptr = nullptr;
+			}
+
 			lastSelectedObject_ = selectedObject_;
 
 			CheckMenuRadioItem(
@@ -83,6 +90,10 @@ namespace jd
 		}
 		else if (id == MENU_ACTION_CHANGE_CAM)
 		{
+			if (!info.comp_ptr) {
+				LOG(WARNING) << "Camera does not lock at the object";
+				return;
+			}
 			auto ev = event::CameraEvent{};
 			ev.fov = 60.0f;
 			if (camType == event::CameraType::FPS) {
