@@ -23,3 +23,8 @@ namespace jd::exception
 {                                                                     \
     if(HRESULT hr__ = (x); FAILED(hr__)) { throw jd::exception::DxException(hr__, #x, __FILE__, __LINE__); } \
 }
+
+#define ThrowIfFailedMsg(x, msg)                                      \
+{                                                                     \
+	if (HRESULT hr__ = (x); FAILED(hr__)) { throw jd::exception::DxException(hr__, msg, __FILE__, __LINE__); } \
+}

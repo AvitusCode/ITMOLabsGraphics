@@ -6,6 +6,8 @@
 #include "logger.hpp"
 #include "string_utils.hpp"
 
+#include <cmath>
+
 namespace jd
 {
 	InputDevice::InputDevice(Game& inGame) 
@@ -83,13 +85,6 @@ namespace jd
 			.offset = mouseOffset_,
 			.wheelDelta = mouseWheelDelta_
 		};
-
-		/*DLOG(INFO) << strings::print("Mouse: posX=%04.4f posY:%04.4f offsetX:%04.4f offsetY:%04.4f, wheelDelta=%04d",
-			mousePosition.x,
-			mousePosition.y,
-			mouseOffset.x,
-			mouseOffset.y,
-			mouseWheelDelta);*/
 
 		mouseMove_.Broadcast(moveArgs);
 	}

@@ -19,17 +19,14 @@
     <Filter Include="Source Files\utils">
       <UniqueIdentifier>{5da84713-4427-45f2-91e1-4975eb327de2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\lab1">
-      <UniqueIdentifier>{8f9af5a4-b816-4944-94c4-174ca3698d49}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\lab1">
-      <UniqueIdentifier>{7a4b433d-008e-477f-a809-a66df17b5437}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\common">
       <UniqueIdentifier>{8c925259-2cd4-41ec-8b8f-339b88f054bd}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\common">
       <UniqueIdentifier>{62eaca98-6d4b-43d0-ba5d-c7cbc1145c68}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\events">
+      <UniqueIdentifier>{131247e4-6a87-4b4a-8b85-333d4e1de386}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -57,25 +54,55 @@
     <ClCompile Include="input_device.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="paddle_component.cpp">
-      <Filter>Source Files\lab1</Filter>
-    </ClCompile>
-    <ClCompile Include="score_component.cpp">
-      <Filter>Source Files\lab1</Filter>
-    </ClCompile>
-    <ClCompile Include="line_component.cpp">
-      <Filter>Source Files\lab1</Filter>
-    </ClCompile>
-    <ClCompile Include="ball_component.cpp">
-      <Filter>Source Files\lab1</Filter>
-    </ClCompile>
-    <ClCompile Include="quad_component.cpp">
+    <ClCompile Include="static_component.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
     <ClCompile Include="triangle_component.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
     <ClCompile Include="SimpleMath.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="shader_manager.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="cube_component.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="sphere_component.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="camera_component.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="cubemap_component.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="WICTextureLoader.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="dxerr.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="DXUT.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="DXUTmisc.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="DXUTDevice11.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="ScreenGrab.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="game_menu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fps_camera.cpp">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="orbit_camera.cpp">
       <Filter>Source Files\common</Filter>
     </ClCompile>
   </ItemGroup>
@@ -116,25 +143,13 @@
     <ClInclude Include="delegates.hpp">
       <Filter>Header Files\utils</Filter>
     </ClInclude>
-    <ClInclude Include="ball_component.hpp">
-      <Filter>Header Files\lab1</Filter>
-    </ClInclude>
-    <ClInclude Include="paddle_component.hpp">
-      <Filter>Header Files\lab1</Filter>
-    </ClInclude>
-    <ClInclude Include="line_component.hpp">
-      <Filter>Header Files\lab1</Filter>
-    </ClInclude>
-    <ClInclude Include="score_component.hpp">
-      <Filter>Header Files\lab1</Filter>
-    </ClInclude>
     <ClInclude Include="triangle_component.hpp">
       <Filter>Header Files\common</Filter>
     </ClInclude>
     <ClInclude Include="velocity_component.hpp">
       <Filter>Header Files\common</Filter>
     </ClInclude>
-    <ClInclude Include="quad_component.hpp">
+    <ClInclude Include="static_component.hpp">
       <Filter>Header Files\common</Filter>
     </ClInclude>
     <ClInclude Include="collidable.hpp">
@@ -144,6 +159,60 @@
       <Filter>Header Files\common</Filter>
     </ClInclude>
     <ClInclude Include="game_component.hpp">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="shader_manager.hpp">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="cube_component.hpp">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="sphere_component.hpp">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="camera_component.hpp">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="pos_event.hpp">
+      <Filter>Header Files\events</Filter>
+    </ClInclude>
+    <ClInclude Include="cubemap_component.hpp">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="WICTextureLoader.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="dxerr.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="DXUT.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="DXUTmisc.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="DXUTDevice11.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="ScreenGrab.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="menu_ptr.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pick_event.hpp">
+      <Filter>Header Files\events</Filter>
+    </ClInclude>
+    <ClInclude Include="camera_event.hpp">
+      <Filter>Header Files\events</Filter>
+    </ClInclude>
+    <ClInclude Include="camera_strategy_interface.hpp">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="fps_camera.hpp">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="orbit_camera.hpp">
       <Filter>Header Files\common</Filter>
     </ClInclude>
   </ItemGroup>

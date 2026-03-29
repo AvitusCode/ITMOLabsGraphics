@@ -6,12 +6,16 @@
 #include "string_utils.hpp"
 #include "exception.hpp"
 
-#include "ball_component.hpp"
-#include "paddle_component.hpp"
-#include "line_component.hpp"
-#include "score_component.hpp"
+#include "shader_manager.hpp"
+
+#include "camera_component.hpp"
+#include "cube_component.hpp"
+#include "sphere_component.hpp"
+#include "cubemap_component.hpp"
 
 #include "logger.hpp"
+
+#include <numbers>
 
 using Microsoft::WRL::ComPtr;
 
@@ -209,34 +213,47 @@ namespace jd
 
 	bool Game::initComponents()
 	{
-		const float aspect = display_.aspect;
-		const float top = 1.0f, bottom = -1.0f;
-		const float score_pos = 0.5f;
+		StaticComponent::initStaticResources();
 
-		auto leftPaddle  = std::make_shared<PaddleComponent>(Keys::W, Keys::S, true);
-		auto rightPaddle = std::make_shared<PaddleComponent>(Keys::Up, Keys::Down, false);
-		auto leftScore   = std::make_shared<ScoreComponent>(-score_pos);
-		auto rightScore  = std::make_shared<ScoreComponent>(score_pos);
-		auto ball        = std::make_shared<BallComponent>(leftScore, rightScore);
-		auto line        = std::make_shared<LineComponent>();
+		const size_t cubeCount = 10;
+		objects_ = 20;
+		objectsPInstance_ = 10;
 
-		ball->addCollider(leftPaddle.get());
-		ball->addCollider(rightPaddle.get());
+		const auto shaders = ShaderManager::LoadShaders(L"./resources/shaders/instanced.hlsl");
 
-		components_.reserve(6);
-		components_.push_back(std::move(leftPaddle));
-		components_.push_back(std::move(rightPaddle));
-		components_.push_back(std::move(leftScore));
-		components_.push_back(std::move(rightScore));
-		components_.push_back(std::move(ball));
-		components_.push_back(std::move(line));
+		auto camera = std::make_shared<CameraComponent>(60.0f, display_.aspect, 0.1f, 1000.0f);
+		auto cubes = std::make_shared<CubeComponent>(cubeCount, shaders);
+		auto spheres = std::make_shared<SphereComponent>(cubeCount, shaders);
+		auto cubeMap = std::make_shared<CubeMapComponent>(L"./resources/shaders/cubeMap.hlsl", L".\\resources\\textures\\cosmo");
+		StaticComponent::setCubeMap(cubeMap);
 
-		QuadComponent::initSharedResources(L"./resources/shaders/pongShader.hlsl");
+		auto& delegate = inputDevice_->getMouseDelegate();
+		auto& cube_delegate = cubes->getSubscriber();
+		cameraDelegate_.BindRaw(camera.get(), &CameraComponent::ProcessCameraEvent);
+		pickCubesDelegate_.BindRaw(cubes.get(), &StaticComponent::pickHandle);
+		pickSpheresDelegate_.BindRaw(spheres.get(), &StaticComponent::pickHandle);
+		cube_delegate.BindRaw(spheres.get(), &SphereComponent::onRotate);
+		mouseDelegateHandle_ = delegate.AddRaw(camera.get(), &CameraComponent::ProcessInput);
+
+		cubes->initilize([](size_t i) {
+			float angle = static_cast<float>(i) * std::numbers::pi_v<float> * 2.0f / 10.0f;
+			float radius = 20.0f;
+			float scale = 5.0f;
+			float x = cosf(angle) * radius;
+			float z = sinf(angle) * radius;
+			return DirectX::SimpleMath::Matrix::CreateTranslation(x, 0.0f, z) * DirectX::SimpleMath::Matrix::CreateScale(scale);
+		});
+		
+		components_.push_back(std::move(camera));
+		components_.push_back(std::move(cubeMap));
+		components_.push_back(std::move(cubes));
+		components_.push_back(std::move(spheres));
+
 		for (auto& component : components_) {
 			component->onInit();
-			component->onResize();
 		}
-		QuadComponent::updateProjection(aspect, top, bottom);
+
+		createContextMenu();
 
 		return true;
 	}
@@ -250,6 +267,9 @@ namespace jd
 			// TODO:
 			break;
 		}
+		case WM_COMMAND:
+			applyWMCommand(hwnd, wParam, lParam);
+		break;
 
 		case WM_INPUT:
 		{
@@ -312,8 +332,17 @@ namespace jd
 			((MINMAXINFO*)lParam)->ptMinTrackSize.y = 200;
 			break;
 
+		case WM_RBUTTONUP:
+		{
+			POINT pt;
+			GetCursorPos(&pt);
+			TrackPopupMenu(contextMenu_.get(), TPM_RIGHTBUTTON, pt.x, pt.y, 0, hwnd, nullptr);
+		}
+		break;
+
 		case WM_DESTROY:
 		{
+			inputDevice_->getMouseDelegate().Remove(mouseDelegateHandle_);
 			for (auto& component : components_) {
 				component->onDestroy();
 			}
@@ -329,6 +358,32 @@ namespace jd
 		return DefWindowProc(hwnd, msg, wParam, lParam);
 	}
 
+	bool Game::createDepthStencilView()
+	{
+		D3D11_TEXTURE2D_DESC depthDesc = {};
+		depthDesc.Width = display_.clientWidth;
+		depthDesc.Height = display_.clientHeight;
+		depthDesc.MipLevels = 1;
+		depthDesc.ArraySize = 1;
+		depthDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+		depthDesc.SampleDesc.Count = 1;
+		depthDesc.SampleDesc.Quality = 0;
+		depthDesc.Usage = D3D11_USAGE_DEFAULT;
+		depthDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+
+		ComPtr<ID3D11Texture2D> depthStencil;
+		ThrowIfFailed(device_->CreateTexture2D(&depthDesc, nullptr, depthStencil.GetAddressOf()));
+
+		D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+		dsvDesc.Format = depthDesc.Format;
+		dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+		dsvDesc.Texture2D.MipSlice = 0;
+
+		ThrowIfFailed(device_->CreateDepthStencilView(depthStencil.Get(), &dsvDesc, depthStencilView_.GetAddressOf()));
+
+		return true;
+	}
+
 	void Game::onResize()
 	{
 		if (not is_rtv_init_) {
@@ -336,6 +391,7 @@ namespace jd
 		}
 
 		rtv_.Reset();
+		depthStencilView_.Reset();
 
 		ThrowIfFailed(swapChain_->ResizeBuffers(
 			2,
@@ -347,6 +403,8 @@ namespace jd
 		Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer;
 		ThrowIfFailed(swapChain_->GetBuffer(0, __uuidof(ID3D11Texture2D), &backBuffer));
 		ThrowIfFailed(device_->CreateRenderTargetView(backBuffer.Get(), nullptr, rtv_.GetAddressOf()));
+
+		createDepthStencilView();
 
 		D3D11_VIEWPORT viewport = {};
 		viewport.Width = static_cast<float>(display_.clientWidth);
@@ -362,8 +420,6 @@ namespace jd
 		for (auto& component : components_) {
 			component->onResize();
 		}
-
-		QuadComponent::updateProjection(display_.aspect, 1.0f, -1.0f);
 	}
 
 	void Game::onUpdate(double deltaTime)
@@ -377,8 +433,9 @@ namespace jd
 	{
 		static constexpr float color[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
-		context_->OMSetRenderTargets(1, rtv_.GetAddressOf(), nullptr);
+		context_->OMSetRenderTargets(1, rtv_.GetAddressOf(), depthStencilView_.Get());
 		context_->ClearRenderTargetView(rtv_.Get(), color);
+		context_->ClearDepthStencilView(depthStencilView_.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 		for (auto& component : components_) {
 			component->Draw();

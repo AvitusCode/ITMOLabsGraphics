@@ -12,6 +12,11 @@
 #include "display_win32.hpp"
 #include "game_timer.hpp"
 #include "input_device.hpp"
+#include "menu_ptr.hpp"
+#include "camera_event.hpp"
+#include "static_component.hpp"
+
+#include "pick_event.hpp"
 
 namespace jd
 {
@@ -20,6 +25,13 @@ namespace jd
 	class Game final
 	{
 	public:
+		enum MenuCommands : UINT
+		{
+			MENU_SELECT_OBJECT_BASE = 1000,
+			MENU_ACTION_SPEED_UP = 2000,
+			MENU_ACTION_SLOW_DOWN = 2001,
+			MENU_ACTION_CHANGE_CAM = 2002
+		};
 
 		static Game& getGame() {
 			static Game game;
@@ -58,11 +70,22 @@ namespace jd
 		std::wstring appName_{ L"MyApp" };
 
 		uptr<InputDevice> inputDevice_;
+		menu_ptr contextMenu_;
+		HMENU selectSubMenu_;
+
+		DelegateHandle mouseDelegateHandle_;
+		Delegate<void, const event::CameraEvent&> cameraDelegate_;
+		Delegate<StaticInfo, const event::SimplePickEvent&> pickCubesDelegate_;
+		Delegate<StaticInfo, const event::SimplePickEvent&> pickSpheresDelegate_;
 
 		Microsoft::WRL::ComPtr<IDXGISwapChain> swapChain_;
 		Microsoft::WRL::ComPtr<ID3D11Device> device_;
 		Microsoft::WRL::ComPtr<ID3D11DeviceContext> context_;
 		Microsoft::WRL::ComPtr<ID3D11RenderTargetView> rtv_;
+		Microsoft::WRL::ComPtr<ID3D11DepthStencilView> depthStencilView_;
+
+		size_t objects_{};
+		size_t objectsPInstance_{};
 
 		std::vector<sptr<GameComponent>> components_; // TODO: intrusive ptr
 
@@ -74,7 +97,11 @@ namespace jd
 		bool initMainWindow(HINSTANCE hInstance);
 		bool initDirect3D();
 		bool initComponents();
+		bool createDepthStencilView();
+		void createContextMenu();
 		void printInfo();
+
+		void applyWMCommand(HWND hwnd, WPARAM wParam, LPARAM lParam);
 
 		void onResize();
 		void onUpdate(double deltaTime);

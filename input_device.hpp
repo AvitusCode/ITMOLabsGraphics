@@ -10,16 +10,16 @@ namespace jd
 {
 	class Game;
 
+	struct MouseMoveEventArgs
+	{
+		POINT position;
+		POINT offset;
+		int wheelDelta;
+	};
+
 	class InputDevice
 	{
 	public:
-		struct MouseMoveEventArgs
-		{
-			POINT position;
-			POINT offset;
-			int wheelDelta;
-		};
-
 		struct KeyboardInputEventArgs {
 			/*
 			 * The "make" scan code (key depression).
@@ -98,6 +98,9 @@ namespace jd
 		void onKeyDown(KeyboardInputEventArgs args);
 		void onMouseMove(RawMouseEventArgs args);
 
+		MulticastDelegate<const MouseMoveEventArgs&>& getMouseDelegate() noexcept { return mouseMove_; }
+
+		POINT GetMouseDelta() const noexcept { return mouseOffset_; }
 	private:
 		Game& game_;
 		std::bitset<512> keys_;
